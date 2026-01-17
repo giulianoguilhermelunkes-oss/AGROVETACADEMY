@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { TopicViewer } from './components/TopicViewer';
-import { AuthScreen } from './components/AuthScreen';
 import { COURSES } from './constants';
 import { Course, User } from './types';
 import { storageService } from './services/storageService';
@@ -20,23 +19,37 @@ const useHashLocation = () => {
   return { location: loc, navigate };
 };
 
+const GUEST_USER: User = {
+  id: 'guest_user_v1',
+  name: 'Estudante',
+  email: 'estudante@agrovet.app',
+  role: 'student',
+  avatarColor: 'bg-emerald-600',
+  completedTopics: [],
+  studentCode: 'ALUNO'
+};
+
 export default function App() {
   const { location, navigate } = useHashLocation();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
   
   // State for navigating deep structure
   const [selectedDisciplineId, setSelectedDisciplineId] = useState<string | null>(null);
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
   const [selectedTopicName, setSelectedTopicName] = useState<string>('');
   
-  // Initialize Auth
+  // Initialize App with Auto-Login (Guest Mode)
   useEffect(() => {
-    const user = storageService.getCurrentUser();
-    if (user) {
-      setCurrentUser(user);
+    let user = storageService.getCurrentUser();
+    
+    // If no user exists in storage, create and save the default guest
+    if (!user) {
+      user = GUEST_USER;
+      storageService.saveUser(user);
+      storageService.login(user.email);
     }
-    setLoading(false);
+    
+    setCurrentUser(user);
   }, []);
 
   // Reset selection when changing main routes
@@ -53,17 +66,6 @@ export default function App() {
     if (location.startsWith('/course/zootecnia')) return COURSES.find(c => c.id === 'zootecnia');
     if (location.startsWith('/course/veterinaria')) return COURSES.find(c => c.id === 'veterinaria');
     return undefined;
-  };
-
-  const handleLogin = (user: User) => {
-    setCurrentUser(user);
-    navigate('/');
-  };
-
-  const handleLogout = () => {
-    storageService.logout();
-    setCurrentUser(null);
-    navigate('/');
   };
 
   const activeCourse = getActiveCourse();
@@ -108,14 +110,10 @@ export default function App() {
 
   const discipline = getDisciplineDetails();
 
-  if (loading) return null;
-
-  if (!currentUser) {
-    return <AuthScreen onLogin={handleLogin} />;
-  }
+  if (!currentUser) return null; // Wait for init
 
   return (
-    <Layout activeCourse={activeCourse?.id} onNavigate={navigate} currentUser={currentUser} onLogout={handleLogout}>
+    <Layout activeCourse={activeCourse?.id} onNavigate={navigate} currentUser={currentUser}>
       
       {/* Home Page */}
       {isHome && (
@@ -127,7 +125,7 @@ export default function App() {
             </span>
           </h1>
           <p className="text-xl text-slate-500 max-w-2xl">
-            Olá, <span className="font-bold text-slate-800">{currentUser.name}</span>! Acesse conteúdos completos, didáticos e interativos.
+            Bem-vindo ao portal de conhecimento integrado. Acesse conteúdos completos, didáticos e interativos.
           </p>
           <div className="grid md:grid-cols-3 gap-6 w-full max-w-4xl mt-8">
              <button onClick={() => navigate('/course/agronomia')} className="group p-8 rounded-2xl bg-white border border-emerald-100 shadow-lg hover:shadow-xl hover:border-emerald-300 transition-all text-left">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { GraduationCap, LogOut } from 'lucide-react';
+import { GraduationCap } from 'lucide-react';
 import { User as UserType } from '../types';
 
 interface LayoutProps {
@@ -7,10 +7,9 @@ interface LayoutProps {
   activeCourse?: string;
   onNavigate: (path: string) => void;
   currentUser: UserType;
-  onLogout: () => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, activeCourse, onNavigate, currentUser, onLogout }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, activeCourse, onNavigate, currentUser }) => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
@@ -36,15 +35,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeCourse, onNaviga
                <div className="text-right hidden sm:block">
                   <p className="text-xs font-bold text-slate-800">{currentUser.name}</p>
                   <p className="text-[10px] uppercase tracking-wider text-slate-500">
-                    {currentUser.role === 'student' ? 'Aluno' : `Prof. ${currentUser.specialization}`}
+                    Estudante
                   </p>
                </div>
                <div className={`w-9 h-9 rounded-full ${currentUser.avatarColor} flex items-center justify-center text-white font-bold shadow-sm`}>
                   {currentUser.name.charAt(0).toUpperCase()}
                </div>
-               <button onClick={onLogout} className="p-2 text-slate-400 hover:text-red-600 transition-colors" title="Sair">
-                 <LogOut className="w-5 h-5" />
-               </button>
             </div>
           </div>
         </div>
