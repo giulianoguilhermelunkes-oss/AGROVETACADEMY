@@ -16,16 +16,35 @@ const getApiKey = () => {
 };
 
 const apiKey = getApiKey();
-const ai = new GoogleGenAI({ apiKey });
+
+// Initialize AI lazily or handle empty key to prevent immediate crash
+let ai: GoogleGenAI | null = null;
+try {
+  if (apiKey) {
+    ai = new GoogleGenAI({ apiKey });
+  }
+} catch (error) {
+  console.warn("AI Service initialization paused: Invalid or missing API Key.");
+}
 
 export const generateTopicContent = async (
   courseName: string,
   disciplineName: string,
   topicName: string
 ): Promise<EducationalContent | null> => {
-  if (!apiKey) {
-    console.error("API Key missing");
-    return null;
+  if (!apiKey || !ai) {
+    console.error("API Key missing or AI service not initialized");
+    // Try re-initializing if key appeared later (edge case)
+    const currentKey = getApiKey();
+    if (currentKey) {
+       try {
+         ai = new GoogleGenAI({ apiKey: currentKey });
+       } catch (e) {
+         return null;
+       }
+    } else {
+       return null;
+    }
   }
 
   // Using gemini-3-flash-preview for search capability and reasoning
@@ -112,7 +131,6 @@ Liste as principais fontes utilizadas (Instituições Oficiais, Manuais, etc).`;
         systemInstruction,
         // Enabling Google Search for grounding as requested
         tools: [{ googleSearch: {} }],
-        // We want raw Markdown text matching the template, not JSON
       }
     });
 

@@ -5,7 +5,7 @@ import { TopicViewer } from './components/TopicViewer';
 import { COURSES } from './constants';
 import { Course, User } from './types';
 import { storageService } from './services/storageService';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Loader2 } from 'lucide-react';
 
 // Simple Hash Router Implementation
 const useHashLocation = () => {
@@ -40,16 +40,22 @@ export default function App() {
   
   // Initialize App with Auto-Login (Guest Mode)
   useEffect(() => {
-    let user = storageService.getCurrentUser();
-    
-    // If no user exists in storage, create and save the default guest
-    if (!user) {
-      user = GUEST_USER;
-      storageService.saveUser(user);
-      storageService.login(user.email);
+    try {
+      let user = storageService.getCurrentUser();
+      
+      // If no user exists in storage, create and save the default guest
+      if (!user) {
+        user = GUEST_USER;
+        storageService.saveUser(user);
+        storageService.login(user.email);
+      }
+      
+      setCurrentUser(user);
+    } catch (e) {
+      console.error("Failed to initialize user", e);
+      // Fallback in case of storage error
+      setCurrentUser(GUEST_USER);
     }
-    
-    setCurrentUser(user);
   }, []);
 
   // Reset selection when changing main routes
@@ -110,7 +116,16 @@ export default function App() {
 
   const discipline = getDisciplineDetails();
 
-  if (!currentUser) return null; // Wait for init
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+          <p className="text-slate-500 font-medium">Iniciando Portal Acadêmico...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Layout activeCourse={activeCourse?.id} onNavigate={navigate} currentUser={currentUser}>
