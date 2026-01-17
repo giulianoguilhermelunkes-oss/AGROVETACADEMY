@@ -1,7 +1,21 @@
 import { GoogleGenAI } from "@google/genai";
 import { EducationalContent } from "../types";
 
-const apiKey = process.env.API_KEY || '';
+// Safety check for browser environments (GitHub Pages) where process might be undefined
+const getApiKey = () => {
+  if (typeof process !== 'undefined' && process.env) {
+    return process.env.API_KEY || '';
+  }
+  // Fallback if window.process is defined via index.html polyfill
+  // @ts-ignore
+  if (typeof window !== 'undefined' && window.process && window.process.env) {
+    // @ts-ignore
+    return window.process.env.API_KEY || '';
+  }
+  return '';
+};
+
+const apiKey = getApiKey();
 const ai = new GoogleGenAI({ apiKey });
 
 export const generateTopicContent = async (

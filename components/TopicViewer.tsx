@@ -34,7 +34,12 @@ export const TopicViewer: React.FC<TopicViewerProps> = ({
       setLoading(true);
       setError(null);
       try {
-        if (!process.env.API_KEY) {
+        // Safe check for API Key existence in browser environment
+        const hasKey = (typeof process !== 'undefined' && process.env?.API_KEY) || 
+                       // @ts-ignore
+                       (typeof window !== 'undefined' && window.process?.env?.API_KEY);
+
+        if (!hasKey) {
           throw new Error("API_KEY environment variable is missing.");
         }
         
